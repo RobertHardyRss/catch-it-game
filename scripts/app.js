@@ -5,6 +5,7 @@ canvas.width = 800;
 canvas.height = 600;
 
 let goodBlockRatio = 0.25;
+let blockSpawnRate = 500;
 
 class Block {
     constructor() {
@@ -40,18 +41,28 @@ class Block {
 // console.log(myBlock);
 
 let blocks = [ new Block() ];
+let currentTime = 0;
+let timeSinceLastBlock = 0;
 
-
-function gameLoop() {
+function gameLoop(timestamp) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    blocks.push(new Block());
+    let changeInTime = timestamp - currentTime;
+    currentTime = timestamp;
+
+    timeSinceLastBlock += changeInTime;
+    if(timeSinceLastBlock >= blockSpawnRate) {
+        blocks.push(new Block());
+    }
+    
 
     blocks.forEach((block) => {
         block.update();
         block.render();
     });
 
+    blocks = blocks.filter(b => !b.isOffscreen);
+    //console.log(blocks);
     requestAnimationFrame(gameLoop);
 }
 
