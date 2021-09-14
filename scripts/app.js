@@ -61,11 +61,15 @@ class Block {
 		this.isOffscreen = false;
 		this.isCaught = false;
 		this.isScored = false;
+
+		this.isFading = false;
+		this.opacity = 1;
 	}
 
 	update() {
 		this.y += this.speed;
 		this.isOffscreen = this.y >= canvas.height;
+		this.checkForCatch();
 	}
 
 	render() {
@@ -75,6 +79,22 @@ class Block {
 		ctx.fillRect(this.x, this.y, this.width, this.height);
 
 		ctx.restore();
+	}
+
+	checkForCatch() {
+		let bottom = this.y + this.height;
+
+		// if I am above the catch block, return
+		if (bottom < player.y) return;
+		if (this.isFading || this.isOffscreen || this.isCaught) return;
+
+		let rhs = this.x + this.width;
+		if (rhs < player.x || this.x > player.x + player.width) {
+			this.isFading = true;
+			return;
+		}
+
+		this.isCaught = true;
 	}
 }
 
@@ -102,7 +122,7 @@ function gameLoop(timestamp) {
 		block.render();
 	});
 
-	blocks = blocks.filter((b) => !b.isOffscreen);
+	blocks = blocks.filter((b) => !b.isOffscreen && !b.isCaught);
 	//console.log(blocks);
 
 	player.update();
