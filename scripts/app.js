@@ -36,6 +36,18 @@ let player = {
 	},
 };
 
+let scoreBoard = {
+	goodTally: 0,
+	badTally: 0,
+	scoreBlock: function (block) {
+		if (block.isGoodBlock) {
+			this.goodTally++;
+		} else {
+			this.badTally++;
+		}
+	},
+};
+
 window.addEventListener("keydown", (e) => {
 	if (e.key === "ArrowLeft" || e.key === "a" || e.key === "A")
 		player.isMovingLeft = true;
@@ -64,20 +76,20 @@ class Block {
 
 		this.isFading = false;
 		this.opacity = 1;
+		this.color = this.isGoodBlock ? 120 : 0;
 	}
 
 	update() {
 		this.y += this.speed;
 		this.isOffscreen = this.y >= canvas.height;
 		this.checkForCatch();
+		if (this.isFading) this.opacity -= 0.1;
 	}
 
 	render() {
 		ctx.save();
-
-		ctx.fillStyle = this.isGoodBlock ? "green" : "red";
+		ctx.fillStyle = `hsla(${this.color}, 100%, 50%, ${this.opacity})`;
 		ctx.fillRect(this.x, this.y, this.width, this.height);
-
 		ctx.restore();
 	}
 
@@ -94,6 +106,7 @@ class Block {
 			return;
 		}
 
+		scoreBoard.scoreBlock(this);
 		this.isCaught = true;
 	}
 }
