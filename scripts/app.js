@@ -47,19 +47,39 @@ let scoreBoard = {
 	x: 8,
 	y: 544,
 	scoredBlockY: 552,
+	victoryBlockX: 384,
+	isGameOver: false,
+	didPlayerWin: false,
+
 	scoreBlock: function (block) {
 		let goodStartingX = 16;
 		let badStartingX = 752;
 		let scoreBlockSpacing = 40;
+		let spacingMultiplier = 0;
 
 		if (block.isGoodBlock) {
 			this.goodTally++;
 			this.goodBlocks.push(block);
-			block.x = goodStartingX;
+			spacingMultiplier = this.goodBlocks.length - 1;
+			if (spacingMultiplier < 8) {
+				block.x = goodStartingX + spacingMultiplier * scoreBlockSpacing;
+			} else {
+				block.x = this.victoryBlockX;
+				this.isGameOver = true;
+				didPlayerWin = true;
+			}
 		} else {
 			this.badTally++;
 			this.badBlocks.push(block);
 			block.x = badStartingX;
+			spacingMultiplier = this.badBlocks.length - 1;
+			if (spacingMultiplier < 8) {
+				block.x = badStartingX - spacingMultiplier * scoreBlockSpacing;
+			} else {
+				block.x = this.victoryBlockX;
+				this.isGameOver = true;
+				didPlayerWin = false;
+			}
 		}
 		block.isScored = true;
 		block.y = this.scoredBlockY;
@@ -170,7 +190,9 @@ function gameLoop(timestamp) {
 	scoreBoard.update();
 	scoreBoard.render();
 
-	requestAnimationFrame(gameLoop);
+	if (!scoreBoard.isGameOver) {
+		requestAnimationFrame(gameLoop);
+	}
 }
 
 requestAnimationFrame(gameLoop);
