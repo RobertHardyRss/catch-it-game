@@ -36,15 +36,41 @@ let player = {
 	},
 };
 
+let sbImage = new Image();
+sbImage.src = "../images/scoreboard.png";
+
 let scoreBoard = {
 	goodTally: 0,
 	badTally: 0,
+	goodBlocks: [],
+	badBlocks: [],
+	x: 8,
+	y: 544,
+	scoredBlockY: 552,
 	scoreBlock: function (block) {
+		let goodStartingX = 16;
+		let badStartingX = 752;
+		let scoreBlockSpacing = 40;
+
 		if (block.isGoodBlock) {
 			this.goodTally++;
+			this.goodBlocks.push(block);
+			block.x = goodStartingX;
 		} else {
 			this.badTally++;
+			this.badBlocks.push(block);
+			block.x = badStartingX;
 		}
+		block.isScored = true;
+		block.y = this.scoredBlockY;
+	},
+	update: function () {},
+	render: function () {
+		ctx.save();
+		ctx.drawImage(sbImage, this.x, this.y);
+		this.goodBlocks.forEach((block) => block.render());
+		this.badBlocks.forEach((block) => block.render());
+		ctx.restore();
 	},
 };
 
@@ -140,6 +166,9 @@ function gameLoop(timestamp) {
 
 	player.update();
 	player.render();
+
+	scoreBoard.update();
+	scoreBoard.render();
 
 	requestAnimationFrame(gameLoop);
 }
