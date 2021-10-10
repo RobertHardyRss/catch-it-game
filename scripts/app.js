@@ -4,6 +4,12 @@ const ctx = canvas.getContext("2d");
 canvas.width = 800;
 canvas.height = 600;
 
+const audioBadCatch = document.getElementById("audioBadCatch");
+const audioGoodCatch = document.getElementById("audioGoodCatch");
+const audioReduceScore = document.getElementById("audioReduceScore");
+const audioWin = document.getElementById("audioWin");
+const audioLose = document.getElementById("audioLose");
+
 let goodBlockRatio = 0.25;
 let blockSpawnRate = 500;
 const BLOCK_SIZE = 32;
@@ -18,6 +24,8 @@ let player = {
 	isMovingRight: false,
 	speed: 10,
 
+	color: 0,
+
 	update: function () {
 		// move left or move right if moving?
 		if (this.isMovingLeft) this.x -= this.speed;
@@ -27,11 +35,14 @@ let player = {
 			this.x = 0;
 		}
 		if (this.x > canvas.width - this.width) this.x = canvas.width - this.width;
+		this.color += 10;
+		if (this.color >= 350) this.color = 0;
 	},
 	render: function () {
 		ctx.save();
-		ctx.fillStyle = "black";
+		ctx.fillStyle = `hsl(${this.color}, 100%, 50%)`;
 		ctx.fillRect(this.x, this.y, this.width, this.height);
+		ctx.stroke();
 		ctx.restore();
 	},
 };
@@ -63,7 +74,9 @@ let scoreBoard = {
 			spacingMultiplier = this.goodBlocks.length - 1;
 			if (spacingMultiplier < 8) {
 				block.x = goodStartingX + spacingMultiplier * scoreBlockSpacing;
+				audioGoodCatch.play();
 			} else {
+				audioWin.play();
 				block.x = this.victoryBlockX;
 				this.isGameOver = true;
 				didPlayerWin = true;
@@ -75,7 +88,9 @@ let scoreBoard = {
 			spacingMultiplier = this.badBlocks.length - 1;
 			if (spacingMultiplier < 8) {
 				block.x = badStartingX - spacingMultiplier * scoreBlockSpacing;
+				audioBadCatch.play();
 			} else {
+				audioLose.play();
 				block.x = this.victoryBlockX;
 				this.isGameOver = true;
 				didPlayerWin = false;
@@ -83,6 +98,13 @@ let scoreBoard = {
 		}
 		block.isScored = true;
 		block.y = this.scoredBlockY;
+	},
+	reduceScore: function () {
+		if (this.goodBlocks.length) {
+			this.goodBlocks.pop();
+			this.goodTally--;
+			audioReduceScore.play();
+		}
 	},
 	update: function () {},
 	render: function () {
@@ -140,11 +162,18 @@ class Block {
 	}
 
 	checkForCatch() {
-		let bottom = this.y + this.height;
+		if (this.isOffscreen && !this.isScored && this.isGoodBlock) {
+			scoreBoard.reduceScore();
+			this.isScored = true;
+			return;
+		}
+
+		if (this.isFading || this.isOffscreen || this.isCaught || this.isScored)
+			return;
 
 		// if I am above the catch block, return
+		let bottom = this.y + this.height;
 		if (bottom < player.y) return;
-		if (this.isFading || this.isOffscreen || this.isCaught) return;
 
 		let rhs = this.x + this.width;
 		if (rhs < player.x || this.x > player.x + player.width) {
@@ -157,8 +186,90 @@ class Block {
 	}
 }
 
-// let myBlock = new Block();
-// console.log(myBlock);
+class StaticBackgroundLayer {
+	constructor(image) {
+		this.x = 0;
+		this.y = 0;
+		this.height = canvas.height;
+		this.width = canvas.width;
+		this.image = image;
+	}
+	update() {}
+	render() {
+		ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+	}
+}
+
+class HorizontalScrollingBackgroundLayer extends StaticBackgroundLayer {
+	constructor(image, scrollSpeed) {
+		super(image);
+		this.width = canvas.width * 2;
+		this.scrollSpeed = scrollSpeed;
+	}
+	update() {
+		this.x -= this.scrollSpeed;
+		if (this.x <= this.width * -1) this.x = 0;
+	}
+	render() {
+		ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+		ctx.drawImage(
+			this.image,
+			this.x + this.width,
+			this.y,
+			this.width,
+			this.height
+		);
+	}
+}
+
+let cloudsFar = new Image();
+cloudsFar.src = "../images/clouds-far.png";
+let cloudsMedium = new Image();
+cloudsMedium.src = "../images/clouds-medium.png";
+let cloudsNear = new Image();
+cloudsNear.src = "../images/clouds-near.png";
+let cloudsClose = new Image();
+cloudsClose.src = "../images/clouds-close.png";
+
+let mountainsFar = new Image();
+mountainsFar.src = "../images/mountains-far.png";
+let mountainsMedium = new Image();
+mountainsMedium.src = "../images/mountains-medium.png";
+let mountainsNear = new Image();
+mountainsNear.src = "../images/mountains-near.png";
+
+let layer0 = new HorizontalScrollingBackgroundLayer(cloudsFar, 0.05);
+let layer1 = new HorizontalScrollingBackgroundLayer(cloudsMedium, 0.1);
+let layer2 = new HorizontalScrollingBackgroundLayer(cloudsNear, 0.15);
+let layer3 = new HorizontalScrollingBackgroundLayer(cloudsClose, 0.3);
+
+let staticLayer0 = new StaticBackgroundLayer(mountainsFar);
+let staticLayer1 = new StaticBackgroundLayer(mountainsMedium);
+let staticLayer2 = new StaticBackgroundLayer(mountainsNear);
+
+let gradientLayer = {
+	update: function () {},
+	render: function () {
+		ctx.save();
+		let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+		gradient.addColorStop(0, "aqua");
+		gradient.addColorStop(1, "purple");
+		ctx.fillStyle = gradient;
+		ctx.fillRect(0, 0, canvas.width, canvas.height);
+		ctx.restore();
+	},
+};
+
+let layers = [
+	gradientLayer,
+	layer0,
+	staticLayer0,
+	layer1,
+	staticLayer1,
+	layer2,
+	staticLayer2,
+	layer3,
+];
 
 let blocks = [new Block()];
 let currentTime = 0;
@@ -169,6 +280,11 @@ function gameLoop(timestamp) {
 
 	let changeInTime = timestamp - currentTime;
 	currentTime = timestamp;
+
+	layers.forEach((layer) => {
+		layer.update();
+		layer.render();
+	});
 
 	timeSinceLastBlock += changeInTime;
 	if (timeSinceLastBlock >= blockSpawnRate) {
