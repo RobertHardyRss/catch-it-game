@@ -271,6 +271,44 @@ let layers = [
 	layer3,
 ];
 
+class CountDownTimer {
+	constructor() {
+		this.x = canvas.width - 120;
+		this.y = 70;
+		this.timer = 60;
+		this.lastUpdate = 0;
+
+		this.countdownGradient = ctx.createLinearGradient(0, 0, 0, this.y);
+		this.countdownGradient.addColorStop("0.4", "#fff");
+		this.countdownGradient.addColorStop("0.5", "#000");
+		this.countdownGradient.addColorStop("0.55", "#4040ff");
+		this.countdownGradient.addColorStop("0.6", "#000");
+		this.countdownGradient.addColorStop("0.9", "#fff");
+	}
+
+	update(deltaTime) {
+		this.lastUpdate += deltaTime;
+		if (this.lastUpdate >= 1000) {
+			this.timer -= 1;
+			this.lastUpdate = 0;
+		}
+		if (this.timer === 0) {
+			scoreBoard.isGameOver = true;
+		}
+	}
+
+	render() {
+		ctx.save();
+		ctx.fillStyle = this.countdownGradient;
+		ctx.font = "90px Georgia";
+		ctx.strokeText(this.timer, this.x, this.y);
+		ctx.fillText(this.timer, this.x, this.y);
+		ctx.restore();
+	}
+}
+
+let countdown = new CountDownTimer();
+
 let blocks = [new Block()];
 let currentTime = 0;
 let timeSinceLastBlock = 0;
@@ -281,30 +319,20 @@ function gameLoop(timestamp) {
 	let changeInTime = timestamp - currentTime;
 	currentTime = timestamp;
 
-	layers.forEach((layer) => {
-		layer.update();
-		layer.render();
-	});
-
 	timeSinceLastBlock += changeInTime;
 	if (timeSinceLastBlock >= blockSpawnRate) {
 		timeSinceLastBlock = 0;
 		blocks.push(new Block());
 	}
 
-	blocks.forEach((block) => {
-		block.update();
-		block.render();
+	let gameObjects = [...layers, ...blocks, player, scoreBoard, countdown];
+
+	gameObjects.forEach((object) => {
+		object.update(changeInTime);
+		object.render();
 	});
 
 	blocks = blocks.filter((b) => !b.isOffscreen && !b.isCaught);
-	//console.log(blocks);
-
-	player.update();
-	player.render();
-
-	scoreBoard.update();
-	scoreBoard.render();
 
 	if (!scoreBoard.isGameOver) {
 		requestAnimationFrame(gameLoop);
