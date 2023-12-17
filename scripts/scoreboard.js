@@ -5,7 +5,7 @@ const audioWin = document.getElementById("audioWin");
 const audioLose = document.getElementById("audioLose");
 
 let sbImage = new Image();
-sbImage.src = "../images/scoreboard.png";
+sbImage.src = "images/scoreboard.png";
 
 let scoreBoard = {
 	goodTally: 0,

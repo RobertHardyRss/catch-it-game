@@ -35,20 +35,20 @@ class HorizontalScrollingBackgroundLayer extends StaticBackgroundLayer {
 }
 
 let cloudsFar = new Image();
-cloudsFar.src = "../images/clouds-far.png";
+cloudsFar.src = "images/clouds-far.png";
 let cloudsMedium = new Image();
-cloudsMedium.src = "../images/clouds-medium.png";
+cloudsMedium.src = "images/clouds-medium.png";
 let cloudsNear = new Image();
-cloudsNear.src = "../images/clouds-near.png";
+cloudsNear.src = "images/clouds-near.png";
 let cloudsClose = new Image();
-cloudsClose.src = "../images/clouds-close.png";
+cloudsClose.src = "images/clouds-close.png";
 
 let mountainsFar = new Image();
-mountainsFar.src = "../images/mountains-far.png";
+mountainsFar.src = "images/mountains-far.png";
 let mountainsMedium = new Image();
-mountainsMedium.src = "../images/mountains-medium.png";
+mountainsMedium.src = "images/mountains-medium.png";
 let mountainsNear = new Image();
-mountainsNear.src = "../images/mountains-near.png";
+mountainsNear.src = "images/mountains-near.png";
 
 let layer0 = new HorizontalScrollingBackgroundLayer(cloudsFar, 0.05);
 let layer1 = new HorizontalScrollingBackgroundLayer(cloudsMedium, 0.1);
